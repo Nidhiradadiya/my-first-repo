@@ -1,5 +1,5 @@
-# Nixpacks configuration for Railway
-# This ensures Railway only builds the backend
+# Nixpacks configuration for Railway Backend Only
+# Ensures Railway uses Node 20 and stays in backend directory
 
 [phases.setup]
 nixPkgs = ['nodejs_20']
