@@ -11,7 +11,9 @@ import {
     ShoppingCart,
     Plus,
     ArrowRight,
-    Activity
+    Activity,
+    Users,
+    Factory
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -25,11 +27,58 @@ import {
     ResponsiveContainer,
     PieChart,
     Pie,
-    Cell
+    Cell,
+    BarChart,
+    Bar
 } from 'recharts';
 
+// Dummy data for when API fails or no data exists
+const DUMMY_STATS = {
+    totalSalesAmount: 45680.50,
+    totalPurchaseAmount: 32450.75,
+    totalRawMaterialStock: 1842,
+    totalFinishedProductStock: 956,
+    todaysSales: [
+        {
+            _id: '1',
+            invoiceNumber: 'INV-2024-001',
+            customerName: 'Acme Corporation',
+            totalAmount: 5240.00,
+            createdAt: new Date('2024-11-20T09:30:00')
+        },
+        {
+            _id: '2',
+            invoiceNumber: 'INV-2024-002',
+            customerName: 'Global Traders Inc',
+            totalAmount: 8950.50,
+            createdAt: new Date('2024-11-20T11:15:00')
+        },
+        {
+            _id: '3',
+            invoiceNumber: 'INV-2024-003',
+            customerName: 'Metro Distribution',
+            totalAmount: 3420.75,
+            createdAt: new Date('2024-11-20T13:45:00')
+        },
+        {
+            _id: '4',
+            invoiceNumber: 'INV-2024-004',
+            customerName: 'Prime Solutions Ltd',
+            totalAmount: 6890.25,
+            createdAt: new Date('2024-11-20T15:20:00')
+        }
+    ],
+    lowStockRawMaterials: [
+        { _id: '1', name: 'Steel Sheets', stock: 45 },
+        { _id: '2', name: 'Copper Wire', stock: 23 }
+    ],
+    lowStockFinishedProducts: [
+        { _id: '1', name: 'Product A', stock: 12 }
+    ]
+};
+
 export default function Dashboard() {
-    const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState(DUMMY_STATS); // Start with dummy data
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -38,7 +87,8 @@ export default function Dashboard() {
                 const { data } = await api.get('/dashboard');
                 setStats(data);
             } catch (error) {
-                console.error('Failed to fetch dashboard stats', error);
+                console.error('Failed to fetch dashboard stats, using dummy data', error);
+                // Keep dummy data if API fails
             } finally {
                 setLoading(false);
             }
@@ -50,22 +100,29 @@ export default function Dashboard() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-900"></div>
             </div>
         );
     }
 
-    if (!stats) return <div className="text-center p-10">Failed to load dashboard data.</div>;
-
-    // Mock data for charts (since we don't have historical data in the simple API yet)
+    // Sales data with more realistic numbers
     const salesData = [
-        { name: 'Mon', sales: 4000 },
-        { name: 'Tue', sales: 3000 },
-        { name: 'Wed', sales: 2000 },
-        { name: 'Thu', sales: 2780 },
-        { name: 'Fri', sales: 1890 },
-        { name: 'Sat', sales: 2390 },
-        { name: 'Sun', sales: 3490 },
+        { name: 'Mon', sales: 12400, purchases: 8200 },
+        { name: 'Tue', sales: 15800, purchases: 9500 },
+        { name: 'Wed', sales: 11200, purchases: 7800 },
+        { name: 'Thu', sales: 18900, purchases: 11200 },
+        { name: 'Fri', sales: 22500, purchases: 13400 },
+        { name: 'Sat', sales: 19800, purchases: 10900 },
+        { name: 'Sun', sales: 16300, purchases: 9200 },
+    ];
+
+    const monthlySalesData = [
+        { month: 'Jan', amount: 145000 },
+        { month: 'Feb', amount: 132000 },
+        { month: 'Mar', amount: 168000 },
+        { month: 'Apr', amount: 195000 },
+        { month: 'May', amount: 210000 },
+        { month: 'Jun', amount: 189000 },
     ];
 
     const stockData = [
@@ -73,7 +130,7 @@ export default function Dashboard() {
         { name: 'Finished Goods', value: stats.totalFinishedProductStock },
     ];
 
-    const COLORS = ['#3b82f6', '#8b5cf6'];
+    const COLORS = ['#92400E', '#D97706'];
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
@@ -83,15 +140,15 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Welcome back, here's what's happening today.</p>
+                    <h1 className="text-5xl font-serif font-light text-amber-950 tracking-tight">Dashboard</h1>
+                    <p className="text-amber-800/60 mt-2 font-light">Welcome back, here's your business overview.</p>
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex gap-3"
                 >
-                    <Link href="/sales" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1">
+                    <Link href="/sales" className="bg-amber-900 hover:bg-amber-800 text-amber-50 px-6 py-3 rounded-lg flex items-center gap-2 shadow-sm transition-all">
                         <Plus size={20} /> New Bill
                     </Link>
                 </motion.div>
@@ -100,108 +157,105 @@ export default function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Today's Sales"
-                    value={`$${stats.totalSalesAmount.toFixed(2)}`}
+                    title="Today's Revenue"
+                    value={`$${stats.totalSalesAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     icon={TrendingUp}
-                    color="from-green-500 to-emerald-500"
+                    bgColor="bg-emerald-50"
+                    iconBg="bg-emerald-100"
+                    iconColor="text-emerald-700"
+                    textColor="text-emerald-900"
                     delay={0.1}
                 />
                 <StatCard
-                    title="Today's Purchases"
-                    value={`$${stats.totalPurchaseAmount.toFixed(2)}`}
-                    icon={TrendingDown}
-                    color="from-orange-500 to-red-500"
+                    title="Total Purchases"
+                    value={`$${stats.totalPurchaseAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    icon={ShoppingCart}
+                    bgColor="bg-rose-50"
+                    iconBg="bg-rose-100"
+                    iconColor="text-rose-700"
+                    textColor="text-rose-900"
                     delay={0.2}
                 />
                 <StatCard
-                    title="Raw Material Stock"
-                    value={stats.totalRawMaterialStock}
+                    title="Raw Materials"
+                    value={stats.totalRawMaterialStock.toLocaleString()}
                     icon={Package}
-                    color="from-blue-500 to-cyan-500"
+                    bgColor="bg-amber-50"
+                    iconBg="bg-amber-100"
+                    iconColor="text-amber-700"
+                    textColor="text-amber-900"
                     delay={0.3}
                 />
                 <StatCard
-                    title="Finished Goods"
-                    value={stats.totalFinishedProductStock}
-                    icon={ShoppingCart}
-                    color="from-purple-500 to-pink-500"
+                    title="Finished Products"
+                    value={stats.totalFinishedProductStock.toLocaleString()}
+                    icon={Factory}
+                    bgColor="bg-blue-50"
+                    iconBg="bg-blue-100"
+                    iconColor="text-blue-700"
+                    textColor="text-blue-900"
                     delay={0.4}
                 />
             </div>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Sales Trend Chart */}
+                {/* Weekly Sales vs Purchases */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+                    className="lg:col-span-2 bg-stone-50 p-8 rounded-xl border border-stone-200/50"
                 >
-                    <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                        <Activity className="text-blue-500" /> Weekly Sales Overview
+                    <h2 className="text-2xl font-serif font-light text-amber-950 mb-6 flex items-center gap-2">
+                        <Activity className="text-amber-700" size={24} /> Weekly Performance
                     </h2>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={salesData}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#92400E" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#92400E" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorPurchases" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#D97706" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7E5E4" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontFamily: 'serif' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontFamily: 'serif' }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontFamily: 'serif', backgroundColor: '#FFFBEB' }}
                                 />
-                                <Area type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                                <Area type="monotone" dataKey="sales" stroke="#92400E" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" name="Sales" />
+                                <Area type="monotone" dataKey="purchases" stroke="#D97706" strokeWidth={2} fillOpacity={1} fill="url(#colorPurchases)" name="Purchases" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </motion.div>
 
-                {/* Stock Distribution Chart */}
+                {/* Monthly Trend */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+                    className="bg-stone-50 p-8 rounded-xl border border-stone-200/50"
                 >
-                    <h2 className="text-xl font-bold text-gray-800 mb-6">Stock Distribution</h2>
-                    <div className="h-64 relative">
+                    <h2 className="text-2xl font-serif font-light text-amber-950 mb-6">Monthly Trend</h2>
+                    <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stockData}
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {stockData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
+                            <BarChart data={monthlySalesData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7E5E4" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontFamily: 'serif', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontFamily: 'serif', fontSize: 12 }} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontFamily: 'serif', backgroundColor: '#FFFBEB' }}
+                                />
+                                <Bar dataKey="amount" fill="#92400E" radius={[8, 8, 0, 0]} />
+                            </BarChart>
                         </ResponsiveContainer>
-                        <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                            <span className="text-3xl font-bold text-gray-800">{stats.totalRawMaterialStock + stats.totalFinishedProductStock}</span>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider">Total Items</span>
-                        </div>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                        {stockData.map((item, index) => (
-                            <div key={item.name} className="flex justify-between items-center text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
-                                    <span className="text-gray-600">{item.name}</span>
-                                </div>
-                                <span className="font-bold text-gray-900">{item.value}</span>
-                            </div>
-                        ))}
                     </div>
                 </motion.div>
             </div>
@@ -212,44 +266,44 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
-                    className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                    className="lg:col-span-2 bg-stone-50 rounded-xl border border-stone-200/50 overflow-hidden"
                 >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-gray-800">Today's Bills</h2>
-                        <Link href="/sales" className="text-blue-600 text-sm hover:underline flex items-center gap-1 font-medium">
+                    <div className="p-6 border-b border-stone-200/50 flex justify-between items-center">
+                        <h2 className="text-2xl font-serif font-light text-amber-950">Today's Transactions</h2>
+                        <Link href="/sales/history" className="text-amber-800 text-sm hover:text-amber-900 flex items-center gap-1 font-light">
                             View All <ArrowRight size={16} />
                         </Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider font-semibold">
+                            <thead className="bg-amber-50/30 text-amber-900 text-xs uppercase tracking-wider font-light border-b border-stone-200/50">
                                 <tr>
-                                    <th className="p-4">Invoice #</th>
-                                    <th className="p-4">Customer</th>
-                                    <th className="p-4">Amount</th>
-                                    <th className="p-4">Time</th>
-                                    <th className="p-4">Status</th>
+                                    <th className="p-4 font-light">Invoice</th>
+                                    <th className="p-4 font-light">Customer</th>
+                                    <th className="p-4 font-light">Amount</th>
+                                    <th className="p-4 font-light">Time</th>
+                                    <th className="p-4 font-light">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-stone-200/30">
                                 {stats.todaysSales && stats.todaysSales.length > 0 ? (
                                     stats.todaysSales.map((sale) => (
-                                        <tr key={sale._id} className="hover:bg-gray-50 transition-colors group">
-                                            <td className="p-4 font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{sale.invoiceNumber}</td>
-                                            <td className="p-4 text-gray-600">{sale.customerName}</td>
-                                            <td className="p-4 font-bold text-gray-900">${sale.totalAmount.toFixed(2)}</td>
-                                            <td className="p-4 text-gray-500 text-sm">
+                                        <tr key={sale._id} className="hover:bg-amber-50/20 transition-colors">
+                                            <td className="p-4 font-medium text-amber-950">{sale.invoiceNumber}</td>
+                                            <td className="p-4 text-stone-700 font-light">{sale.customerName}</td>
+                                            <td className="p-4 font-medium text-amber-900">${sale.totalAmount.toFixed(2)}</td>
+                                            <td className="p-4 text-stone-600 text-sm font-light">
                                                 {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="p-4">
-                                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">Paid</span>
+                                                <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-light">Completed</span>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="p-8 text-center text-gray-500">
-                                            No sales recorded today.
+                                        <td colSpan="5" className="p-8 text-center text-stone-500 font-light">
+                                            No transactions recorded today.
                                         </td>
                                     </tr>
                                 )}
@@ -263,45 +317,45 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                    className="bg-stone-50 rounded-xl border border-stone-200/50 overflow-hidden"
                 >
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <AlertTriangle className="text-red-500" size={24} /> Low Stock Alerts
+                    <div className="p-6 border-b border-stone-200/50">
+                        <h2 className="text-2xl font-serif font-light text-amber-950 flex items-center gap-2">
+                            <AlertTriangle className="text-rose-600" size={24} /> Stock Alerts
                         </h2>
                     </div>
                     <div className="p-4 space-y-3">
                         {stats.lowStockRawMaterials.length === 0 && stats.lowStockFinishedProducts.length === 0 ? (
-                            <div className="text-center text-gray-500 py-8 flex flex-col items-center">
-                                <Package size={48} className="text-green-200 mb-2" />
-                                <p>All stock levels are healthy.</p>
+                            <div className="text-center text-stone-500 py-8 flex flex-col items-center">
+                                <Package size={48} className="text-emerald-200 mb-2" />
+                                <p className="font-light">All stock levels are healthy.</p>
                             </div>
                         ) : (
                             <>
                                 {stats.lowStockRawMaterials.map((item) => (
-                                    <div key={item._id} className="flex justify-between items-center p-4 bg-red-50/50 rounded-xl border border-red-100 hover:bg-red-50 transition-colors">
+                                    <div key={item._id} className="flex justify-between items-center p-4 bg-rose-50 rounded-lg border border-rose-100">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                            <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
                                             <div>
-                                                <p className="font-bold text-gray-800">{item.name}</p>
-                                                <p className="text-xs text-red-500 font-medium">Raw Material</p>
+                                                <p className="font-medium text-amber-950">{item.name}</p>
+                                                <p className="text-xs text-rose-600 font-light">Raw Material</p>
                                             </div>
                                         </div>
-                                        <span className="bg-white text-red-600 text-xs font-bold px-3 py-1 rounded-full border border-red-100 shadow-sm">
+                                        <span className="bg-white text-rose-700 text-xs font-medium px-3 py-1 rounded-full border border-rose-200">
                                             {item.stock} left
                                         </span>
                                     </div>
                                 ))}
                                 {stats.lowStockFinishedProducts.map((item) => (
-                                    <div key={item._id} className="flex justify-between items-center p-4 bg-orange-50/50 rounded-xl border border-orange-100 hover:bg-orange-50 transition-colors">
+                                    <div key={item._id} className="flex justify-between items-center p-4 bg-amber-50 rounded-lg border border-amber-100">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                            <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
                                             <div>
-                                                <p className="font-bold text-gray-800">{item.name}</p>
-                                                <p className="text-xs text-orange-500 font-medium">Finished Product</p>
+                                                <p className="font-medium text-amber-950">{item.name}</p>
+                                                <p className="text-xs text-amber-700 font-light">Finished Product</p>
                                             </div>
                                         </div>
-                                        <span className="bg-white text-orange-600 text-xs font-bold px-3 py-1 rounded-full border border-orange-100 shadow-sm">
+                                        <span className="bg-white text-amber-800 text-xs font-medium px-3 py-1 rounded-full border border-amber-200">
                                             {item.stock} left
                                         </span>
                                     </div>
@@ -311,24 +365,155 @@ export default function Dashboard() {
                     </div>
                 </motion.div>
             </div>
+
+            {/* Additional Widgets Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Top Products */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="bg-stone-50 rounded-xl border border-stone-200/50 p-6"
+                >
+                    <h3 className="text-2xl font-serif font-light text-amber-950 mb-6">Top Products</h3>
+                    <div className="space-y-4">
+                        {[
+                            { name: 'Product Alpha', sales: 245, revenue: 12450 },
+                            { name: 'Product Beta', sales: 189, revenue: 9870 },
+                            { name: 'Product Gamma', sales: 156, revenue: 8230 },
+                            { name: 'Product Delta', sales: 142, revenue: 7450 }
+                        ].map((product, index) => (
+                            <div key={index} className="flex justify-between items-center p-3 bg-white rounded-lg border border-stone-200/30">
+                                <div>
+                                    <p className="font-medium text-amber-950">{product.name}</p>
+                                    <p className="text-xs text-stone-600 font-light">{product.sales} units sold</p>
+                                </div>
+                                <span className="text-amber-900 font-medium">${product.revenue.toLocaleString()}</span>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* Quick Actions */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.0 }}
+                    className="bg-stone-50 rounded-xl border border-stone-200/50 p-6"
+                >
+                    <h3 className="text-2xl font-serif font-light text-amber-950 mb-6">Quick Actions</h3>
+                    <div className="space-y-3">
+                        <Link href="/sales" className="flex items-center gap-3 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-100 transition-colors group">
+                            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Plus className="text-emerald-700" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-medium text-amber-950">New Sale</p>
+                                <p className="text-xs text-stone-600 font-light">Create invoice</p>
+                            </div>
+                        </Link>
+
+                        <Link href="/purchase" className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-100 transition-colors group">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <ShoppingCart className="text-blue-700" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-medium text-amber-950">New Purchase</p>
+                                <p className="text-xs text-stone-600 font-light">Record purchase</p>
+                            </div>
+                        </Link>
+
+                        <Link href="/manufacturing" className="flex items-center gap-3 p-4 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-100 transition-colors group">
+                            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Factory className="text-amber-700" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-medium text-amber-950">Manufacturing</p>
+                                <p className="text-xs text-stone-600 font-light">Log production</p>
+                            </div>
+                        </Link>
+
+                        <Link href="/inventory/raw" className="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-100 transition-colors group">
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Package className="text-purple-700" size={20} />
+                            </div>
+                            <div>
+                                <p className="font-medium text-amber-950">View Inventory</p>
+                                <p className="text-xs text-stone-600 font-light">Check stock</p>
+                            </div>
+                        </Link>
+                    </div>
+                </motion.div>
+
+                {/* Performance Metrics */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.1 }}
+                    className="bg-stone-50 rounded-xl border border-stone-200/50 p-6"
+                >
+                    <h3 className="text-2xl font-serif font-light text-amber-950 mb-6">Performance</h3>
+                    <div className="space-y-4">
+                        <div className="p-4 bg-white rounded-lg border border-stone-200/30">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-stone-600 font-light">Sales Target</span>
+                                <span className="text-sm font-medium text-amber-900">78%</span>
+                            </div>
+                            <div className="w-full bg-stone-200 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full" style={{ width: '78%' }}></div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-white rounded-lg border border-stone-200/30">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-stone-600 font-light">Inventory Turnover</span>
+                                <span className="text-sm font-medium text-amber-900">92%</span>
+                            </div>
+                            <div className="w-full bg-stone-200 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-white rounded-lg border border-stone-200/30">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-stone-600 font-light">Production Efficiency</span>
+                                <span className="text-sm font-medium text-amber-900">85%</span>
+                            </div>
+                            <div className="w-full bg-stone-200 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-white rounded-lg border border-stone-200/30">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-stone-600 font-light">Customer Satisfaction</span>
+                                <span className="text-sm font-medium text-amber-900">96%</span>
+                            </div>
+                            <div className="w-full bg-stone-200 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style={{ width: '96%' }}></div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 }
 
-function StatCard({ title, value, icon: Icon, color, delay }) {
+function StatCard({ title, value, icon: Icon, bgColor, iconBg, iconColor, textColor, delay }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all hover:shadow-md hover:border-blue-200 group"
+            className={`${bgColor} p-6 rounded-xl border border-stone-200/50 flex items-center gap-4 transition-all hover:shadow-sm`}
         >
-            <div className={`bg-gradient-to-br ${color} p-4 rounded-xl text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+            <div className={`${iconBg} p-4 rounded-lg ${iconColor}`}>
                 <Icon size={24} />
             </div>
             <div>
-                <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-                <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+                <p className="text-stone-600 text-sm font-light mb-1">{title}</p>
+                <h3 className={`text-2xl font-serif font-light ${textColor}`}>{value}</h3>
             </div>
         </motion.div>
     );

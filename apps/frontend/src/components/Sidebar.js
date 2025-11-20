@@ -50,22 +50,22 @@ const Sidebar = () => {
     return (
         <motion.div
             animate={{ width: collapsed ? 80 : 280 }}
-            className="h-screen bg-slate-900 text-white sticky top-0 flex flex-col shadow-2xl z-50 overflow-hidden shrink-0"
+            className="h-screen bg-amber-950 text-amber-50 sticky top-0 flex flex-col shadow-2xl z-50 overflow-hidden shrink-0 border-r border-amber-900/50"
         >
             {/* Header */}
-            <div className="p-6 flex items-center justify-between border-b border-slate-800/50">
+            <div className="p-6 flex items-center justify-between border-b border-amber-900/50">
                 <AnimatePresence>
                     {!collapsed && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-3"
                         >
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl">
-                                E
+                            <div className="w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 rounded-lg flex items-center justify-center shadow-lg shadow-amber-900/50">
+                                <span className="text-lg font-serif font-bold text-white">E</span>
                             </div>
-                            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                            <span className="text-xl font-serif font-light text-amber-50">
                                 ERP Pro
                             </span>
                         </motion.div>
@@ -73,14 +73,14 @@ const Sidebar = () => {
                 </AnimatePresence>
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-amber-900 text-amber-400 hover:text-amber-100 transition-colors"
                 >
                     {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                 </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.path || (item.submenu && item.submenu.some(sub => pathname === sub.path));
@@ -95,18 +95,18 @@ const Sidebar = () => {
                                     <div className={`
                                         flex items-center gap-3 p-3 rounded-xl transition-all duration-300 relative group
                                         ${isActive
-                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/20'
-                                            : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                                            ? 'bg-gradient-to-r from-amber-800 to-amber-900 text-white shadow-lg shadow-amber-950/50 border border-amber-700/30'
+                                            : 'text-amber-200/60 hover:bg-amber-900/50 hover:text-amber-100'
                                         }
                                     `}>
-                                        <Icon size={22} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} />
+                                        <Icon size={22} className={isActive ? 'text-amber-100' : 'text-amber-200/60 group-hover:text-amber-100'} />
                                         <AnimatePresence>
                                             {!collapsed && (
                                                 <motion.span
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     exit={{ opacity: 0, x: -10 }}
-                                                    className="font-medium whitespace-nowrap"
+                                                    className="font-light whitespace-nowrap"
                                                 >
                                                     {item.name}
                                                 </motion.span>
@@ -115,21 +115,21 @@ const Sidebar = () => {
 
                                         {/* Tooltip for collapsed state */}
                                         {collapsed && (
-                                            <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                                            <div className="absolute left-full ml-4 px-3 py-1.5 bg-amber-900 text-amber-50 text-sm font-light rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl border border-amber-800">
                                                 {item.name}
                                             </div>
                                         )}
                                     </div>
                                 </Link>
                                 {!collapsed && (
-                                    <div className="ml-8 mt-1 space-y-1">
+                                    <div className="ml-8 mt-1 space-y-1 border-l border-amber-900/50 pl-2">
                                         {item.submenu.map((subItem) => (
                                             <Link key={subItem.path} href={subItem.path}>
                                                 <div className={`
-                                                    p-2 rounded-lg text-sm transition-all
+                                                    p-2 rounded-lg text-sm transition-all font-light
                                                     ${pathname === subItem.path
-                                                        ? 'bg-blue-500/10 text-blue-400 font-medium'
-                                                        : 'text-slate-400 hover:bg-slate-800/30 hover:text-white'
+                                                        ? 'text-amber-100 bg-amber-900/30'
+                                                        : 'text-amber-200/50 hover:text-amber-100 hover:bg-amber-900/20'
                                                     }
                                                 `}>
                                                     {subItem.name}
@@ -151,18 +151,18 @@ const Sidebar = () => {
                             <div className={`
                                 flex items-center gap-3 p-3 rounded-xl transition-all duration-300 relative group
                                 ${isActive
-                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/20'
-                                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                                    ? 'bg-gradient-to-r from-amber-800 to-amber-900 text-white shadow-lg shadow-amber-950/50 border border-amber-700/30'
+                                    : 'text-amber-200/60 hover:bg-amber-900/50 hover:text-amber-100'
                                 }
                             `}>
-                                <Icon size={22} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} />
+                                <Icon size={22} className={isActive ? 'text-amber-100' : 'text-amber-200/60 group-hover:text-amber-100'} />
                                 <AnimatePresence>
                                     {!collapsed && (
                                         <motion.span
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -10 }}
-                                            className="font-medium whitespace-nowrap"
+                                            className="font-light whitespace-nowrap"
                                         >
                                             {item.name}
                                         </motion.span>
@@ -171,7 +171,7 @@ const Sidebar = () => {
 
                                 {/* Tooltip for collapsed state */}
                                 {collapsed && (
-                                    <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                                    <div className="absolute left-full ml-4 px-3 py-1.5 bg-amber-900 text-amber-50 text-sm font-light rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl border border-amber-800">
                                         {item.name}
                                     </div>
                                 )}
@@ -182,16 +182,16 @@ const Sidebar = () => {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-800/50 space-y-2">
+            <div className="p-4 border-t border-amber-900/50 space-y-2 bg-amber-950/50">
                 <button
                     onClick={handleLogout}
                     className={`
-                        flex items-center gap-3 p-3 w-full rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group
+                        flex items-center gap-3 p-3 w-full rounded-xl text-amber-200/60 hover:bg-rose-900/20 hover:text-rose-200 transition-all group
                         ${collapsed ? 'justify-center' : ''}
                     `}
                 >
                     <LogOut size={22} />
-                    {!collapsed && <span className="font-medium">Logout</span>}
+                    {!collapsed && <span className="font-light">Logout</span>}
                 </button>
             </div>
         </motion.div>
