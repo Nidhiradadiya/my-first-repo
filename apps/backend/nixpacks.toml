@@ -1,0 +1,11 @@
+# Nixpacks configuration for Railway
+# This ensures Railway only builds the backend
+
+[phases.setup]
+nixPkgs = ['nodejs_20']
+
+[phases.install]
+cmds = ['npm install --production']
+
+[start]
+cmd = 'node src/index.js'
