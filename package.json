@@ -1,0 +1,21 @@
+{
+  "name": "billing-manufacturing-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspaces --if-present",
+    "deploy": "npm install && npm run build && npm run start",
+    "deploy:pm2": "npm install && npm run build && pm2 start ecosystem.config.js && pm2 save",
+    "install:all": "npm install && npm install --workspaces",
+    "clean": "rm -rf node_modules apps/*/node_modules apps/*/.next",
+    "logs:backend": "pm2 logs erp-backend",
+    "logs:frontend": "pm2 logs erp-frontend",
+    "restart": "pm2 restart all",
+    "stop": "pm2 stop all"
+  }
+}
