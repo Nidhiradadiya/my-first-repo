@@ -9,7 +9,12 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+// Allow all origins with credentials
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
